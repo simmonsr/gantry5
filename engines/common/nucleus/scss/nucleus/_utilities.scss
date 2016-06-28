@@ -93,9 +93,11 @@
 
 // Size Adjustment
 .full-width {
-	@include flex(0 100%);
+	@include flex-grow(0);
+	@include flex-basis(100%);
 	.g-block {
-		@include flex(0 100%);
+		@include flex-grow(0);
+		@include flex-basis(100%);
 	}
 }
 
@@ -119,10 +121,6 @@
 
 .visible-desktop {
   	display: inherit !important;
-}
-
-.g-block.visible-desktop {
-    display: block !important;
 }
 
 @media print {
