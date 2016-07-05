@@ -24,8 +24,69 @@ class Document
     public static $timestamp_age = 604800;
     public static $urlFilterParams;
 
+    protected static $stack = [];
+    protected static $frameworks = [];
     protected static $scripts = [];
     protected static $styles = [];
+    protected static $availableFrameworks = [
+        'jquery' => 'registerJquery',
+        'jquery.framework' => 'registerJquery',
+        'jquery.ui.core' => 'registerJqueryUiSortable',
+        'jquery.ui.sortable' => 'registerJqueryUiSortable',
+        'bootstrap.2' => 'registerBootstrap2',
+        'bootstrap.3' => 'registerBootstrap3',
+        'mootools' => 'registerMootools',
+        'mootools.framework' => 'registerMootools',
+        'mootools.core' => 'registerMootools',
+        'mootools.more' => 'registerMootoolsMore'
+    ];
+
+    /**
+     * Create new local instance of document allowing asset caching.
+     */
+    public static function push()
+    {
+        array_push(static::$stack, ['frameworks' => static::$frameworks, 'scripts' => static::$scripts, 'styles' => static::$styles]);
+
+    }
+
+    /**
+     * Return local instance of document allowing it to be cached.
+     *
+     * @return array
+     */
+    public static function pop()
+    {
+        $current = ['frameworks' => static::$frameworks, 'scripts' => static::$scripts, 'styles' => static::$styles];
+
+        $old = array_pop(static::$stack);
+
+        static::$frameworks = isset($old['frameworks']) ? $old['frameworks'] : [];
+        static::$scripts = isset($old['scripts']) ? $old['scripts'] : [];
+        static::$styles = isset($old['styles']) ? $old['styles'] : [];
+
+        return $current;
+    }
+
+    /**
+     * Append local assets to the outer document.
+     *
+     * @param array $document
+     */
+    public static function appendHeaderTags(array $document)
+    {
+        if (isset($document['frameworks'])) {
+            static::$frameworks = static::appendArray(static::$frameworks, $document['frameworks']);
+        }
+
+        if (isset($document['scripts'])) {
+            static::$scripts = static::appendArray(static::$scripts, $document['scripts']);
+        }
+
+        if (isset($document['styles'])) {
+            static::$styles = static::appendArray(static::$styles, $document['styles']);
+        }
+    }
 
     public static function addHeaderTag(array $element, $location = 'head', $priority = 0)
     {
@@ -103,17 +164,17 @@ class Document
 
     public static function getStyles($location = 'head')
     {
-        if (!isset(self::$styles[$location])) {
+        if (!isset(static::$styles[$location])) {
             return [];
         }
 
-        $styles = self::$styles[$location];
+        $styles = static::$styles[$location];
 
         krsort($styles, SORT_NUMERIC);
 
         $html = [];
 
-        foreach (self::$styles[$location] as $styles) {
+        foreach (static::$styles[$location] as $styles) {
             foreach ($styles as $style) {
                 switch ($style[':type']) {
                     case 'file':
@@ -139,17 +200,17 @@ class Document
 
     public static function getScripts($location = 'head')
     {
-        if (!isset(self::$scripts[$location])) {
+        if (!isset(static::$scripts[$location])) {
             return [];
         }
 
-        $scripts = self::$scripts[$location];
+        $scripts = static::$scripts[$location];
 
         krsort($scripts, SORT_NUMERIC);
 
         $html = [];
 
-        foreach (self::$scripts[$location] as $scripts) {
+        foreach (static::$scripts[$location] as $scripts) {
             foreach ($scripts as $script) {
                 switch ($script[':type']) {
                     case 'file':
@@ -174,7 +235,13 @@ class Document
 
     public static function load($framework)
     {
-        return false;
+        if (!isset(static::$availableFrameworks[$framework])) {
+            return false;
+        }
+
+        static::$frameworks[] = $framework;
+
+        return true;
     }
 
     public static function registerAssets()
@@ -186,12 +253,22 @@ class Document
         return static::rootUri();
     }
 
-
+    /**
+     * NOTE: In PHP this function can be called either from Gantry DI container or statically.
+     *
+     * @return string
+     */
     public static function rootUri()
     {
         return '';
     }
 
+    /**
+     * NOTE: In PHP this function can be called either from Gantry DI container or statically.
+     *
+     * @param bool $addDomain
+     * @return string
+     */
     public static function domain($addDomain = false)
     {
         return '';
@@ -201,6 +278,8 @@ class Document
      * Return URL to the resource.
      *
      * @example {{ url('gantry-theme://images/logo.png')|default('http://www.placehold.it/150x100/f4f4f4') }}
+     *
+     * NOTE: In PHP this function can be called either from Gantry DI container or statically.
      *
      * @param  string $url         Resource to be located.
      * @param  bool $domain        True to include domain name.
@@ -349,5 +428,120 @@ class Document
         $url = static::url(trim($matches[2], '"\''), $domain, $timestamp_age);
 
         return "{$matches[1]}url({$url})";
+    }
+
+    /**
+     * @param array $target
+     * @param array $source
+     * @return array
+     */
+    protected static function appendArray(array $target, array $source)
+    {
+        foreach ($source as $location => $priorities) {
+            if (is_array($priorities)) {
+                foreach ($priorities as $priority => $hashes) {
+                    if (is_array($hashes)) {
+                        foreach ($hashes as $hash => $element) {
+                            $target[$location][$priority][$hash] = $element;
+                        }
+                    } else {
+                            $target[$location][$priority] = $hashes;
+                    }
+                }
+            } else {
+                $target[$location] = $priorities;
+            }
+        }
+
+        return $target;
+    }
+
+    /**
+     * Register loaded frameworks.
+     */
+    protected static function registerFrameworks()
+    {
+        //print_r(static::$frameworks);die();
+        foreach (static::$frameworks as $framework) {
+            if (isset(static::$availableFrameworks[$framework])) {
+                call_user_func([get_called_class(), static::$availableFrameworks[$framework]]);
+            }
+        }
+    }
+
+    protected static function registerJquery()
+    {
+        static::addHeaderTag(
+            [
+                'tag' => 'script',
+                'src' => 'https://code.jquery.com/jquery-2.2.2.min.js',
+                'integrity' => 'sha256-36cp2Co+/62rEAAYHLmRCPIych47CvdM+uTBJwSzWjI=',
+                'crossorigin' => 'anonymous'
+            ],
+            'head',
+            10
+        );
+    }
+
+    protected static function registerJqueryUiSortable()
+    {
+        static::addHeaderTag(
+            [
+                'tag' => 'script',
+                'src' => 'https://code.jquery.com/ui/1.11.4/jquery-ui.min.js',
+                'integrity' => 'sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw=',
+                'crossorigin' => 'anonymous'
+            ],
+            'head',
+            10
+        );
+    }
+
+    protected static function registerBootstrap2()
+    {
+        static::addHeaderTag(
+            [
+                'tag' => 'script',
+                'src' => 'https://maxcdn.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js'
+            ],
+            'head',
+            10
+        );
+    }
+
+    protected static function registerBootstrap3()
+    {
+        static::addHeaderTag(
+            [
+                'tag' => 'script',
+                'src' => 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js'
+            ],
+            'head',
+            10
+        );
+    }
+
+    protected static function registerMootools()
+    {
+        static::addHeaderTag(
+            [
+                'tag' => 'script',
+                'src' => 'https://cdnjs.cloudflare.com/ajax/libs/mootools/1.5.2/mootools-core-compat.min.js'
+            ],
+            'head',
+            10
+        );
+    }
+
+    protected static function registerMootoolsMore()
+    {
+        static::addHeaderTag(
+            [
+                'tag' => 'script',
+                'src' => 'https://cdnjs.cloudflare.com/ajax/libs/mootools-more/1.5.2/mootools-more-compat-compressed.js'
+            ],
+            'head',
+            10
+        );
     }
 }

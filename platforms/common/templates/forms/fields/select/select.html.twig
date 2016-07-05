@@ -19,13 +19,9 @@
             {% for key, text in field.options %}
                 <option
                         {# required attribute structures #}
-                        {% if field.multiple %}
-                            {% if key|trim in value %}selected="selected"{% endif %}
-                        {% else %}
-                            {% if key|trim == value|trim %}selected="selected"{% endif %}
-                        {% endif %}
+                        {% if (value is not iterable and key == value) or (value is iterable and key in value) %}selected="selected"{% endif %}
                         value="{{ key }}"
-                        {# non-gloval attribute structures #}
+                        {# non-global attribute structures #}
                         {% if field.options.disabled in ['on', 'true', 1] %}disabled="disabled"{% endif %}
                         {% if field.options.label is defined %}label="{{ field.options.label }}"{% endif %}
                         >{{ text }}</option>

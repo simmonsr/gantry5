@@ -19,36 +19,37 @@ if (!class_exists('Gantry\Framework\Gantry')) {
     return;
 }
 
-$gantry = \Gantry\Framework\Gantry::instance();
-
-/** @var Gantry\Framework\Theme $theme */
-$theme = $gantry['theme'];
+include_once dirname(__FILE__) . '/helper.php';
 
 /** @var object $params */
-$data = json_decode($params->get('particle'), true);
-$type = $data['type'];
-$particle = $data['particle'];
 
-if ($gantry->debug()) {
-    $enabled_outline = $gantry['config']->get("particles.{$particle}.enabled", true);
-    $enabled = isset($data['options']['particle']['enabled']) ? $data['options']['particle']['enabled'] : true;
-    $location = (!$enabled_outline ? 'Outline' : (!$enabled ? 'Module' : null));
+$gantry = \Gantry\Framework\Gantry::instance();
 
-    if ($location) {
-        echo '<div class="alert alert-error">The Particle has been disabled from the ' . $location . ' and won\'t render.</div>';
-        return;
-    }
+GANTRY_DEBUGGER && \Gantry\Debugger::startTimer("module-{$module->id}", "Rendering Particle Module #{$module->id}");
+
+// Set up caching.
+$cacheid = md5($module->id);
+
+$cacheparams = (object) [
+    'cachemode'    => 'id',
+    'class'        => 'ModGantryParticlesHelper',
+    'method'       => 'render',
+    'methodparams' => [$module, $params],
+    'modeparams'   => $cacheid
+];
+
+$data = JModuleHelper::moduleCache($module, $params, $cacheparams);
+
+if (!is_array($data)) {
+    $data = ModGantryParticlesHelper::render($module, $params);
 }
 
-$context = array(
-    'gantry' => $gantry,
-    'inContent' => true,
-    'segment' => array(
-        'id' => "module-{$particle}-{$module->id}",
-        'type' => $type,
-        'subtype' => $particle,
-        'attributes' =>  $data['options']['particle'],
-    )
-);
+list ($html, $assets) = $data;
 
-echo trim($theme->render("@nucleus/content/particle.html.twig", $context));
+/** @var \Gantry\Framework\Document $document */
+$document = $gantry['document'];
+$document->appendHeaderTags($assets);
+
+echo $html;
+
+GANTRY_DEBUGGER && \Gantry\Debugger::stopTimer("module-{$module->id}");

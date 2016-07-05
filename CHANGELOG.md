@@ -23,6 +23,7 @@
         - Do not close the Atoms modal when clicking on the overlay, in order to prevent accidental loss of changes.
         - When deleting an Outline it will now highlight the title of the Outline in question
         - Make configration overrides persistent, meaning that the value will stay checked even if the value is identical to the global value (#1346)
+        - Improved block sizes compatibility with IE10 and IE11 (thanks @Rdechamps - #1407)
     3. [](#bugfix)
         - Fixed disabled particle rendering in menu item (thanks @nikola3244 - #1313)
         - Fixed typos in tooltips and notices (#1318)
@@ -38,6 +39,8 @@
         - Fixed minor issue that would cause the flickering of the Layout while scrolling, when the Layout was shorter than the Sidebar (#1378)
         - Section titles in the Layout Manager that don't fit are now collapsing with ellipsis and a title (#1392)
         - Fixed missing configuration when duplicating system outlines
+        - Fixed issues with single select field with multiple values (#1402)
+        - Fixed `select.select` with `multiple` option enabled, storing only the first selected option rather than all (#1402)
 2. [Joomla](#joomla)
     1. [](#new)
         - Enable `Layout` tab for `Base Outline`
@@ -49,6 +52,8 @@
         - Fixed issue with `Link Title Attribute` menu setting in Joomla, where the value would be translated as subtitle in Gantry, rather than `title=""` attribute (#1176)
         - Fixed untranslated 404 page title (#1001)
         - Fixed wrong title in newly created outline
+        - Fixed content array particle: alias in link duplicating (#1400) 
+        - Fixed particle module not caching Javascript / CSS (#977)
 3. [WordPress](#wordpress)
     1. [](#new)
         - Extend Assignments with multiple `BuddyPress` conditionals. This requires BuddyPress 2.6 and newer (thanks @horch004 - #1298)
@@ -60,6 +65,8 @@
         - Fixed post type priority not being used in assignments (#1340)
         - Fixed menu particle missing `Expand on Hover` option (#1360)
         - Fixed Admin incompatibility with Jetpack (#1184)
+        - Fixed updating plugins causing endless maintenance mode when `display_errors = On` (#1271) 
+        - Fixed missing layout denying access to admin (#1319)
 
 # 5.2.18
 ## 27/05/2016

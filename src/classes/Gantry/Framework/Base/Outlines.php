@@ -69,9 +69,13 @@ class Outlines extends AbstractOutlineCollection
     {
         $list = [];
         foreach ($this->items as $name => $title) {
-            $index = Layout::index($name);
+            try {
+                $index = Layout::index($name);
 
-            $list += $index['positions'];
+                $list += $index['positions'];
+            } catch (\Exception $e) {
+                // Ignore exceptions, it doesn't matter if missing layouts have no positions.
+            }
         }
 
         return $list;
@@ -548,17 +552,17 @@ class Outlines extends AbstractOutlineCollection
     }
 
     /**
-     * @param array $configurations
+     * @param array $outlines
      * @return array
      */
-    protected function addDefaults(array $configurations)
+    protected function addDefaults(array $outlines)
     {
         return [
             'default' => 'Base Outline',
             '_body_only' => 'Body Only',
             '_error' => 'Error',
             '_offline' => 'Offline'
-        ] + $configurations;
+        ] + $outlines;
     }
 
     /**

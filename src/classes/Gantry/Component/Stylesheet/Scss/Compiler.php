@@ -14,7 +14,7 @@
 namespace Gantry\Component\Stylesheet\Scss;
 
 use Gantry\Component\Filesystem\Folder;
-use Gantry\Framework\Base\Document;
+use Gantry\Framework\Document;
 use Gantry\Framework\Gantry;
 use Leafo\ScssPhp\Compiler as BaseCompiler;
 use Leafo\ScssPhp\Parser;
@@ -41,7 +41,7 @@ class Compiler extends BaseCompiler
 
     public function setBasePath($basePath)
     {
-        $this->basePath = '/' . Folder::getRelativePath($basePath);
+        $this->basePath = rtrim(Document::rootUri(), '/') . '/' . Folder::getRelativePath($basePath);
     }
 
     public function setFonts(array $fonts)
@@ -99,7 +99,7 @@ class Compiler extends BaseCompiler
         $uri = strpos($url, '../') === 0 ? 'gantry-theme://' . substr($url, 3) : $url;
 
         // Generate URL, failed streams will be kept as they are to allow users to find issues.
-        $url = Document::url($uri) ?: $url;
+        $url = Gantry::instance()['document']->url($uri) ?: $url;
 
         // Changes absolute URIs to relative to make the path to work even if the site gets moved.
         if ($url && $url[0] == '/' && $this->basePath) {
