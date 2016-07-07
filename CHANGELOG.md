@@ -1,5 +1,5 @@
 # 5.3.0
-## XX/06/2016
+## XX/07/2016
 
 1. [Common](#common)
     1. [](#new)
@@ -41,12 +41,14 @@
         - Fixed missing configuration when duplicating system outlines
         - Fixed issues with single select field with multiple values (#1402)
         - Fixed `select.select` with `multiple` option enabled, storing only the first selected option rather than all (#1402)
+        - Fixed DOM parser issue with HTML tags when adding inline JS/CSS (#1359)
+        - Fixed issue with anchors and Offcanvas not resetting the overlay in IE and Firefox (#1399)
 2. [Joomla](#joomla)
     1. [](#new)
         - Enable `Layout` tab for `Base Outline`
     2. [](#improved)
         - Hydrogen for Joomla loads now optional `alert` assets from Nucleus to fix potential styling issues
-        - Gantry 5 Particle now displays the Particle type in the lists of modules (#1373)
+        - Gantry 5 Particle now displays, as a tooltip, the Particle type in the lists of modules when hovering over the badge (#1373)
         - Gantry 5 Particle badge for unselected Particles is now orange, to distinct from the selected ones (green)
     3. [](#bugfix)
         - Fixed issue with `Link Title Attribute` menu setting in Joomla, where the value would be translated as subtitle in Gantry, rather than `title=""` attribute (#1176)
@@ -54,6 +56,7 @@
         - Fixed wrong title in newly created outline
         - Fixed content array particle: alias in link duplicating (#1400) 
         - Fixed particle module not caching Javascript / CSS (#977)
+        - Fixed exception thrown in administration if parent theme was not enabled in Joomla
 3. [WordPress](#wordpress)
     1. [](#new)
         - Extend Assignments with multiple `BuddyPress` conditionals. This requires BuddyPress 2.6 and newer (thanks @horch004 - #1298)
